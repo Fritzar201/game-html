@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kota Kita v11.0 — Portrait & Landscape Ready</title>
+<style>
+:root{
+  --bg:#05080f;--panel:rgba(12,19,29,.90);--panel2:#162233;--line:#263950;
+  --text:#f8fafc;--muted:#94a3b8;--green:#22c55e;--yellow:#eab308;
+  --red:#ef4444;--blue:#3b82f6;--purple:#a855f7;--orange:#f97316;
+}
+*{box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{
+  margin:0;padding:0;width:100%;height:100%;overflow:hidden;
+  background:var(--bg);color:var(--text);
+  font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+}
+button,input{font:inherit}
+button{
+  border:1px solid var(--line);background:#1b2c40;color:var(--text);
+  padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;
+  transition:transform .14s cubic-bezier(.34,1.56,.64,1), filter .15s, background .2s, border-color .2s;
+}
+button:hover:not(:disabled){filter:brightness(1.2);transform:translateY(-2px)}
+button:active:not(:disabled){transform:translateY(0) scale(.96)}
+button:disabled{opacity:.36;cursor:not-allowed;transform:none}
+.primary{background:#15803d;border-color:#22c55e}
+.danger{background:#991b1b;border-color:#ef4444}
+.gold{background:#854d0e;border-color:#eab308}
+.blue{background:#1d4ed8;border-color:#3b82f6}
+.purple{background:#6b21a8;border-color:#a855f7}
+
+.game-screen{
+  position:relative;width:100vw;height:100dvh;
+  display:flex;flex-direction:column;justify-content:space-between;
+  overflow:hidden;
+}
+
+/* Fullscreen Scene Stage */
+.city-stage{
+  position:absolute;inset:0;z-index:1;overflow:hidden;
+  background:linear-gradient(180deg,#1e3a5f,#0b1320);
+}
+
+.scene-photo{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center;
+  z-index:1;filter:brightness(.84) contrast(1.03);
+  transition:opacity .45s ease, filter .6s ease;
+}
+.city-stage.night .scene-photo{filter:brightness(.5) saturate(.88)}
+.city-stage.evening .scene-photo{filter:brightness(.72) sepia(.15)}
+
+.scene-vignette{
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:linear-gradient(180deg,rgba(5,8,15,.52) 0%,rgba(5,8,15,.08) 45%,rgba(5,8,15,.72) 100%);
+}
+
+.rain-layer{
+  position:absolute;inset:0;pointer-events:none;z-index:5;opacity:0;transition:opacity .6s;
+  background-image:repeating-linear-gradient(108deg,transparent 0 11px,rgba(186,230,253,.42) 12px 14px);
+  background-size:38px 38px;animation:rainFall .32s linear infinite;
+}
+.city-stage.raining .rain-layer{opacity:1}
+@keyframes rainFall{from{background-position:0 0}to{background-position:-11px 38px}}
+
+/* Venue Banner & Brand Strip */
+.venue-banner{
+  position:absolute;top:64px;left:50%;transform:translateX(-50%);
+  z-index:6;background:rgba(9,15,24,.88);border:1px solid rgba(255,255,255,.22);
+  padding:6px 15px;border-radius:99px;font-weight:800;font-size:12.5px;
+  letter-spacing:.3px;backdrop-filter:blur(6px);box-shadow:0 8px 22px rgba(0,0,0,.45);
+  white-space:nowrap;
+}
+.brand-strip{
+  position:absolute;top:102px;left:50%;transform:translateX(-50%);
+  z-index:6;display:flex;gap:8px;pointer-events:none;
+}
+.mini-sign{
+  font-size:11px;font-weight:900;padding:3px 10px;border-radius:7px;
+  letter-spacing:.6px;box-shadow:0 4px 12px rgba(0,0,0,.4);
+}
+.sign-alfa{background:#dc2626;color:#fff;border:1px solid #facc15}
+.sign-indo{background:#2563eb;color:#fff;border:1px solid #ef4444}
+.sign-honda{background:#b91c1c;color:#fff;border:1px solid #fecaca}
+.sign-suzuki{background:#1d4ed8;color:#fff;border:1px solid #bfdbfe}
+
+/* Road & Traffic (ONLY for outdoor road locations) */
+.road-strip{
+  position:absolute;left:0;right:0;bottom:58px;height:62px;
+  background:linear-gradient(180deg,rgba(26,34,43,.82),rgba(13,18,24,.95));
+  border-top:3px solid rgba(232,223,189,.55);z-index:4;overflow:hidden;
+}
+.road-strip:after{
+  content:"";position:absolute;left:0;right:0;top:29px;
+  border-top:2px dashed rgba(232,223,189,.5);
+}
+.traffic-left{
+  position:absolute;bottom:32px;font-size:26px;z-index:5;
+  transform:scaleX(-1);
+  animation:moveLeftSmooth 10s linear infinite;
+}
+.traffic-right{
+  position:absolute;bottom:5px;font-size:26px;z-index:5;
+  animation:moveRightSmooth 13.5s linear infinite;
+}
+@keyframes moveLeftSmooth{0%{left:108%}100%{left:-70px}}
+@keyframes moveRightSmooth{0%{left:-70px}100%{left:108%}}
+
+/* Clean Indoor/Enclosed Floor */
+.room-floor{
+  display:none;
+  position:absolute;left:0;right:0;bottom:58px;height:96px;z-index:4;
+  background:linear-gradient(180deg,rgba(24,28,34,.35) 0%,rgba(16,20,26,.85) 100%);
+  border-top:2px solid rgba(255,255,255,.18);
+}
+.city-stage.no-road .road-strip{display:none}
+.city-stage.no-road .room-floor{display:block}
+
+/* Player Character Standing in Scene */
+.player-actor{
+  position:absolute;bottom:120px;left:50%;transform:translateX(-50%);
+  z-index:8;display:flex;flex-direction:column;align-items:center;
+  transition:left .65s cubic-bezier(.22,1,.36,1), bottom .35s ease, transform .35s ease;
+}
+.city-stage.no-road .player-actor{
+  bottom:76px;left:50%;transform:translateX(-50%) scale(1.42);
+}
+.player-tag{
+  background:rgba(9,15,24,.9);color:#fff;font-size:11px;font-weight:700;
+  padding:2px 9px;border-radius:99px;border:1px solid rgba(255,255,255,.22);
+  white-space:nowrap;margin-bottom:3px;backdrop-filter:blur(4px);
+}
+.player-sprite{
+  position:relative;font-size:44px;line-height:1;
+  filter:drop-shadow(0 10px 10px rgba(0,0,0,.65));
+  animation:idleBob 1.9s ease-in-out infinite;
+}
+.floor-shadow{
+  width:36px;height:9px;border-radius:50%;
+  background:rgba(0,0,0,.55);margin-top:-3px;
+  filter:blur(2px);
+}
+.action-ring{
+  position:absolute;bottom:2px;width:46px;height:12px;border-radius:50%;
+  border:2px solid var(--green);opacity:0;pointer-events:none;
+}
+.player-actor.acting .action-ring{animation:ringExpand .6s ease-out}
+@keyframes ringExpand{0%{opacity:.95;transform:scale(.4)}100%{opacity:0;transform:scale(2)}}
+.player-actor.walking .player-sprite{animation:walkStep .26s ease-in-out infinite}
+.player-actor.acting .player-sprite{animation:actionJump .5s ease-out}
+.player-actor.driving{bottom:66px}
+.city-stage.no-road .player-actor.driving{bottom:76px}
+.player-actor.driving .player-sprite{font-size:40px;animation:carHum .25s linear infinite}
+
+@keyframes idleBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes walkStep{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-6px) rotate(5deg)}}
+@keyframes actionJump{0%{transform:scale(1)}40%{transform:translateY(-16px) scale(1.14)}100%{transform:scale(1)}}
+@keyframes carHum{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+
+/* Travel / Sleep Fade Overlay */
+.scene-fade{
+  position:fixed;inset:0;background:#02050a;z-index:22;
+  opacity:0;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  transition:opacity .45s ease;
+}
+.scene-fade.active{opacity:1;pointer-events:auto}
+.fade-icon{font-size:48px;animation:idleBob 1.5s ease-in-out infinite}
+.fade-text{font-size:17px;font-weight:800;letter-spacing:.4px;color:#f8fafc}
+.fade-sub{font-size:12.5px;color:var(--muted)}
+
+/* Top HUD */
+.top-hud{
+  position:relative;z-index:10;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  padding:8px 12px;flex-wrap:wrap;
+}
+.brand-pill{
+  background:var(--panel);backdrop-filter:blur(8px);border:1px solid var(--line);
+  border-radius:12px;padding:6px 10px;display:flex;align-items:center;gap:8px;
+}
+.brand{font-weight:900;font-size:16px;letter-spacing:.4px}
+.brand span{color:var(--green)}
+.badge{
+  font-size:11px;padding:3px 8px;border-radius:99px;
+  background:var(--panel);backdrop-filter:blur(8px);
+  border:1px solid var(--line);color:#e2e8f0;font-weight:600;
+}
+.top-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* Corner Vitals & Wallet Wrapper */
+.hud-corners{
+  position:relative;z-index:10;pointer-events:none;
+}
+.corner-vitals{
+  position:fixed;left:14px;top:138px;z-index:10;width:205px;pointer-events:auto;
+  background:var(--panel);backdrop-filter:blur(10px);
+  border:1px solid var(--line);border-radius:14px;padding:10px 12px;
+  box-shadow:0 12px 28px rgba(0,0,0,.45);
+}
+.vital-row{margin-bottom:8px}
+.vital-row:last-child{margin-bottom:0}
+.vital-head{display:flex;justify-content:space-between;font-size:12px;font-weight:700}
+.bar{height:6px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .35s ease,background .3s}
+
+.corner-wallet{
+  position:fixed;right:14px;top:138px;z-index:10;width:225px;pointer-events:auto;
+  background:var(--panel);backdrop-filter:blur(10px);
+  border:1px solid var(--line);border-radius:14px;padding:10px 12px;
+  box-shadow:0 12px 28px rgba(0,0,0,.45);
+}
+.wallet-val{font-size:16px;font-weight:900;color:var(--green)}
+.mini-log{
+  margin-top:8px;max-height:92px;overflow-y:auto;
+  border-top:1px solid rgba(255,255,255,.08);padding-top:6px;
+  font-size:11px;color:#cbd5e1;
+}
+.mini-log p{margin:0 0 4px}
+.good{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--yellow)}.info{color:var(--blue)}
+
+/* Drawer Panel Above Bottom Dock */
+.drawer-panel{
+  position:fixed;left:50%;bottom:74px;transform:translateX(-50%) translateY(18px);
+  width:min(780px,calc(100vw - 20px));max-height:52dvh;overflow-y:auto;
+  background:var(--panel);backdrop-filter:blur(14px);
+  border:1px solid var(--line);border-radius:16px;padding:13px 15px;
+  z-index:13;opacity:0;pointer-events:none;
+  box-shadow:0 18px 45px rgba(0,0,0,.65);
+  transition:opacity .22s ease, transform .26s cubic-bezier(.22,1,.36,1);
+}
+.drawer-panel.open{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.drawer-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
+.drawer-head h3{margin:0;font-size:14.5px;font-weight:800}
+
+.place-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.place-btn{text-align:left;padding:9px 10px}
+.place-btn strong{display:block;font-size:12.5px}
+.place-btn small{color:var(--muted);font-size:10.5px;display:block}
+.place-btn.active{border-color:var(--green);background:rgba(21,128,61,.28)}
+
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.row:last-child{border:0}
+.muted{color:var(--muted);font-size:12px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+.inv-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 10px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:9px;margin-bottom:6px;
+}
+
+/* Bottom Dock Menu */
+.bottom-dock{
+  position:fixed;left:10px;right:10px;bottom:10px;z-index:15;
+  padding:7px 8px;
+  background:var(--panel);backdrop-filter:blur(12px);
+  border:1px solid var(--line);border-radius:16px;
+  display:flex;justify-content:space-between;align-items:center;gap:6px;
+  box-shadow:0 12px 32px rgba(0,0,0,.6);
+}
+.dock-tabs{display:flex;gap:5px;flex:1}
+.dock-btn{flex:1;padding:8px 6px;font-size:12px;white-space:nowrap}
+.dock-btn.active{background:#15803d;border-color:#22c55e;color:#fff}
+.home-quick-btn{padding:8px 10px;font-size:12px;white-space:nowrap}
+
+/* Minigame, Floater, Shake, Modal, Toast */
+.mg-track{height:24px;background:#090f18;border:2px solid #334b66;border-radius:12px;position:relative;overflow:hidden;margin:12px 0}
+.mg-zone{position:absolute;top:0;bottom:0;left:42%;width:16%;background:rgba(34,197,94,.38);border-left:2px solid var(--green);border-right:2px solid var(--green)}
+.mg-cursor{position:absolute;top:0;bottom:0;width:6px;background:var(--yellow);left:0}
+
+.floater{
+  position:fixed;pointer-events:none;font-weight:900;font-size:16px;
+  z-index:30;text-shadow:0 2px 8px rgba(0,0,0,.92);
+  animation:floatUp 1.25s cubic-bezier(.16,1,.3,1) forwards;
+}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(.88)}50%{opacity:1;transform:translateY(-28px) scale(1.1)}100%{opacity:0;transform:translateY(-52px) scale(1)}}
+.shake{animation:shakeAnim .35s ease}
+@keyframes shakeAnim{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+.modal{position:fixed;inset:0;background:rgba(4,8,15,.78);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:16px;z-index:25}
+.modal.show{display:flex}
+.dialog{width:min(460px,100%);background:#131d2b;border:1px solid var(--line);border-radius:16px;padding:18px;max-height:86vh;overflow-y:auto}
+.dialog input{width:100%;padding:9px;border-radius:9px;border:1px solid var(--line);background:#090f18;color:#fff;margin:6px 0 10px}
+
+.toast{
+  position:fixed;top:62px;left:50%;transform:translateX(-50%);
+  background:#11382b;border:1px solid #22c55e;color:#ecfdf5;
+  padding:8px 16px;border-radius:10px;display:none;z-index:28;font-weight:700;font-size:12.5px;
+}
+
+/* PORTRAIT & MOBILE RESPONSIVE FIX */
+@media(max-width:768px){
+  .top-hud{padding:8px 10px 4px}
+  .brand-pill{width:100%;justify-content:space-between}
+  .top-right{width:100%;justify-content:space-between}
+  .top-right button{padding:5px 8px;font-size:12px}
+
+  .hud-corners{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;
+    padding:4px 10px;width:100%;
+  }
+  .corner-vitals,.corner-wallet{
+    position:static;width:auto;padding:8px 10px;border-radius:12px;
+  }
+  .vital-row{margin-bottom:5px}
+  .vital-head{font-size:11px}
+  .bar{height:5px;margin-top:2px}
+  .wallet-val{font-size:14px}
+  .mini-log{max-height:54px;margin-top:5px;padding-top:4px;font-size:10.5px}
+
+  .venue-banner{top:auto;bottom:340px;font-size:11.5px;padding:5px 12px;display:none}
+  .brand-strip{top:auto;bottom:312px;display:flex}
+
+  .city-stage.no-road .player-actor{
+    bottom:265px;transform:translateX(-50%) scale(1.22);
+  }
+  .player-actor{bottom:265px}
+
+  .drawer-panel{
+    left:10px;right:10px;bottom:64px;transform:translateY(14px);
+    width:auto;max-height:42dvh;padding:12px;border-radius:14px;
+  }
+  .drawer-panel.open{transform:translateY(0)}
+  .place-grid{grid-template-columns:repeat(2,1fr);gap:6px}
+  .place-btn{padding:8px}
+
+  .bottom-dock{left:8px;right:8px;bottom:8px;padding:6px;gap:4px;border-radius:14px}
+  .dock-tabs{gap:4px}
+  .dock-btn{padding:8px 4px;font-size:11px;min-width:0}
+  .home-quick-btn{padding:8px 7px;font-size:11px}
+}
+</style>
+</head>
+<body>
+<div class="game-screen" id="appWrap">
+ <div class="city-stage morning no-road" id="cityStage">
+  <img class="scene-photo" id="scenePhoto" alt="Latar lokasi">
+  <div class="scene-vignette"></div>
+  <div class="rain-layer"></div>
+
+  <div class="venue-banner" id="venueBanner">🏪 Minimarket Kota</div>
+  <div class="brand-strip" id="brandStrip"></div>
+
+  <div class="road-strip">
+   <div class="traffic-left">🚕</div>
+   <div class="traffic-right">🚌</div>
+  </div>
+  <div class="room-floor"></div>
+
+  <div class="player-actor" id="playerActor">
+   <div class="player-tag" id="playerStageTag">Warga Baru • Minimarket</div>
+   <div class="player-sprite" id="playerSprite">🧍</div>
+   <div class="floor-shadow"></div>
+   <div class="action-ring"></div>
+  </div>
+ </div>
+
+ <!-- TRAVEL / SLEEP FADE OVERLAY -->
+ <div class="scene-fade" id="sceneFade">
+  <div class="fade-icon" id="fadeIcon">🚶</div>
+  <div class="fade-text" id="fadeText">Dalam perjalanan...</div>
+  <div class="fade-sub" id="fadeSub">Menuju lokasi tujuan</div>
+ </div>
+
+ <div style="position:relative;z-index:10">
+  <header class="top-hud">
+   <div class="brand-pill">
+    <div class="brand">🏙️ KOTA <span>KITA</span> <span class="badge">v11.0</span></div>
+    <span class="muted" id="dateLine" style="font-size:11.5px">Hari 1 • Senin • 07:00</span>
+   </div>
+   <div class="top-right">
+    <span class="badge" id="weather">☀️ Cerah</span>
+    <span class="badge" id="repBadge">⭐ 10 • Lv.1</span>
+    <button onclick="openAchievements()">🏆 <span id="achCount">0/6</span></button>
+    <button id="soundBtn" onclick="toggleSound()">🔊</button>
+    <button onclick="saveGame()">💾</button>
+    <button class="danger" onclick="confirmReset()">🔄</button>
+   </div>
+  </header>
+
+  <div class="hud-corners">
+   <aside class="corner-vitals">
+    <div class="vital-row">
+     <div class="vital-head"><span>❤️ Kesehatan</span><b id="health">100%</b></div>
+     <div class="bar"><i id="healthBar" style="width:100%;background:var(--green)"></i></div>
+    </div>
+    <div class="vital-row">
+     <div class="vital-head"><span>🍚 Kelaparan</span><b id="hunger">20%</b></div>
+     <div class="bar"><i id="hungerBar" style="width:20%;background:var(--orange)"></i></div>
+    </div>
+    <div class="vital-row">
+     <div class="vital-head"><span>💧 Haus</span><b id="thirst">15%</b></div>
+     <div class="bar"><i id="thirstBar" style="width:15%;background:var(--blue)"></i></div>
+    </div>
+    <div class="vital-row">
+     <div class="vital-head"><span>⚡ Energi</span><b id="energy">100%</b></div>
+     <div class="bar"><i id="energyBar" style="width:100%;background:var(--yellow)"></i></div>
+    </div>
+   </aside>
+
+   <aside class="corner-wallet">
+    <div class="muted" style="font-size:11px">💵 Uang Tunai</div>
+    <div class="wallet-val" id="money">Rp500.000</div>
+    <div class="muted" style="font-size:11px;margin-top:2px">📈 Bisnis/Hr: <b class="good" id="passiveIncome">Rp0</b></div>
+    <div class="mini-log" id="log"></div>
+   </aside>
+  </div>
+ </div>
+
+ <section class="drawer-panel open" id="drawerPanel">
+  <div class="drawer-head">
+   <h3 id="drawerTitle">⚡ Aktivitas</h3>
+   <button onclick="toggleDrawer()" style="padding:4px 9px;font-size:11.5px">✕ Tutup</button>
+  </div>
+  <div id="drawerBody"></div>
+ </section>
+
+ <nav class="bottom-dock">
+  <div class="dock-tabs">
+   <button class="dock-btn active" id="dock-activity" onclick="openDockTab('activity')">⚡ Aktivitas</button>
+   <button class="dock-btn" id="dock-map" onclick="openDockTab('map')">🗺️ Map</button>
+   <button class="dock-btn" id="dock-inventory" onclick="openDockTab('inventory')">🎒 Tas</button>
+   <button class="dock-btn" id="dock-menu" onclick="openDockTab('menu')">☰ Menu</button>
+  </div>
+  <button class="blue home-quick-btn" onclick="go('home')">🏠 Rumah</button>
+ </nav>
+</div>
+
+<div class="modal" id="modal"><div class="dialog" id="dialog"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+let soundEnabled=true;
+const audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+function playTone(type){
+ if(!soundEnabled) return;
+ if(audioCtx.state==='suspended') audioCtx.resume();
+ const osc=audioCtx.createOscillator(), gain=audioCtx.createGain();
+ osc.connect(gain); gain.connect(audioCtx.destination);
+ const now=audioCtx.currentTime;
+ if(type==='coin'){
+  osc.type='sine';osc.frequency.setValueAtTime(920,now);osc.frequency.exponentialRampToValueAtTime(1420,now+0.12);
+  gain.gain.setValueAtTime(0.06,now);gain.gain.exponentialRampToValueAtTime(0.001,now+0.15);
+  osc.start(now);osc.stop(now+0.15);
+ }else if(type==='level'){
+  osc.type='triangle';osc.frequency.setValueAtTime(523,now);osc.frequency.setValueAtTime(659,now+0.1);osc.frequency.setValueAtTime(784,now+0.2);
+  gain.gain.setValueAtTime(0.08,now);gain.gain.exponentialRampToValueAtTime(0.001,now+0.35);
+  osc.start(now);osc.stop(now+0.35);
+ }else if(type==='error'){
+  osc.type='sawtooth';osc.frequency.setValueAtTime(175,now);osc.frequency.linearRampToValueAtTime(120,now+0.15);
+  gain.gain.setValueAtTime(0.05,now);gain.gain.exponentialRampToValueAtTime(0.001,now+0.16);
+  osc.start(now);osc.stop(now+0.16);
+ }else{
+  osc.type='sine';osc.frequency.setValueAtTime(440,now);
+  gain.gain.setValueAtTime(0.03,now);gain.gain.exponentialRampToValueAtTime(0.001,now+0.06);
+  osc.start(now);osc.stop(now+0.06);
+ }
+}
+function toggleSound(){soundEnabled=!soundEnabled;$('soundBtn').textContent=soundEnabled?'🔊':'🔇';}
+
+const places=[
+ {
+  id:'market',name:'Minimarket',icon:'🏪',desc:'Dalam minimarket',pos:'50%',
+  noRoad:true,banner:'🏪 Dalam Minimarket',
+  photo:'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=1600&q=80',
+  signs:[{text:'ALFAMART',cls:'sign-alfa'},{text:'INDOMARET',cls:'sign-indo'}]
+ },
+ {
+  id:'home',name:'Rumah',icon:'🏠',desc:'Dalam rumah & tidur',pos:'50%',
+  noRoad:true,banner:'🏠 Dalam Ruangan Rumah',
+  photo:'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80',
+  signs:[]
+ },
+ {
+  id:'warung',name:'Warung Bu Sari',icon:'🍜',desc:'Dalam warung makan',pos:'50%',
+  noRoad:true,banner:'🍜 Dalam Warung Bu Sari',
+  photo:'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1600&q=80',
+  signs:[]
+ },
+ {
+  id:'garage',name:'Dealer',icon:'🏍️',desc:'Showroom Honda & Suzuki',pos:'50%',
+  noRoad:true,banner:'🏍️ Showroom Honda & Suzuki',
+  photo:'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1600&q=80',
+  signs:[{text:'HONDA DEALER',cls:'sign-honda'},{text:'SUZUKI MOTOR',cls:'sign-suzuki'}]
+ },
+ {
+  id:'park',name:'Taman Kota',icon:'🌿',desc:'Taman hijau asri',pos:'50%',
+  noRoad:true,banner:'🌿 Taman Kota',
+  photo:'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?auto=format&fit=crop&w=1600&q=80',
+  signs:[]
+ },
+ {
+  id:'square',name:'Alun-alun',icon:'🌳',desc:'Pusat kota & ngamen',pos:'50%',
+  noRoad:false,banner:'🌳 Alun-alun Kota',
+  photo:'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80',
+  signs:[]
+ },
+ {
+  id:'campus',name:'Kampus Kota',icon:'🎓',desc:'Kampus & kursus',pos:'50%',
+  noRoad:true,banner:'🎓 Kampus Kota',
+  photo:'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1600&q=80',
+  signs:[]
+ },
+ {
+  id:'office',name:'Bursa Kerja',icon:'🏢',desc:'Gedung kantor & shift',pos:'50%',
+  noRoad:true,banner:'🏢 Bursa Kerja',
+  photo:'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80',
+  signs:[]
+ },
+ {
+  id:'business',name:'Kawasan Ruko',icon:'🏬',desc:'Bisnis pasif harian',pos:'50%',
+  noRoad:true,banner:'🏬 Kawasan Ruko',
+  photo:'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=80',
+  signs:[]
+ },
+ {
+  id:'stock',name:'Bursa Saham',icon:'📈',desc:'Saham & crypto',pos:'50%',
+  noRoad:true,banner:'📈 Bursa Saham',
+  photo:'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1600&q=80',
+  signs:[]
+ },
+ {
+  id:'bank',name:'Bank Kota',icon:'🏦',desc:'Tabungan berbunga',pos:'50%',
+  noRoad:true,banner:'🏦 Bank Kota',
+  photo:'https://images.unsplash.com/photo-1501167786227-4cba604a89d6?auto=format&fit=crop&w=1600&q=80',
+  signs:[]
+ }
+];
+
+const jobs=[
+ {title:'🧹 Petugas Kebersihan',salary:120000,reqLevel:1,reqSkill:null,reqVal:0},
+ {title:'🛡️ Petugas Keamanan',salary:170000,reqLevel:2,reqSkill:'comm',reqVal:2},
+ {title:'🛵 Kurir Ekspres',salary:230000,reqLevel:3,reqSkill:'comm',reqVal:3},
+ {title:'💻 Staf IT & Admin',salary:360000,reqLevel:4,reqSkill:'tech',reqVal:4},
+ {title:'📊 Manajer Bisnis',salary:580000,reqLevel:6,reqSkill:'mgmt',reqVal:6}
+];
+
+const businesses=[
+ {id:'kopi',name:'☕ Gerobak Kopi',cost:2500000,baseIncome:180000,reqMgmt:1},
+ {id:'warung',name:'🍲 Warung Padang',cost:8500000,baseIncome:650000,reqMgmt:3},
+ {id:'mart',name:'🏪 Minimarket',cost:25000000,baseIncome:2100000,reqMgmt:6}
+];
+
+const homes=[
+ {name:'Kos sederhana',rent:150000,price:0,energyBonus:0,desc:'Sewa Rp150rb/minggu'},
+ {name:'Kontrakan nyaman',rent:350000,price:0,energyBonus:10,desc:'Sewa Rp350rb/minggu • +10% pemulihan'},
+ {name:'Rumah tipe 36',rent:0,price:15000000,energyBonus:22,desc:'Milik sendiri • +22% pemulihan'}
+];
+
+const stocksList=[
+ {id:'BBRI',name:'Bank Rakyat Indo',price:5200},
+ {id:'TLKM',name:'Telekomunikasi',price:3800},
+ {id:'BTC',name:'Crypto Index ID',price:450000}
+];
+
+const npcs=[
+ {id:'sari',name:'Bu Sari (Warung)',place:'warung',perk:'Diskon 25% makan saat Relasi ≥ 50'},
+ {id:'hendra',name:'Pak Hendra (Pengusaha)',place:'business',perk:'Bonus +15% bisnis saat Relasi ≥ 60'},
+ {id:'rina',name:'Rina (Mahasiswi)',place:'campus',perk:'Diskon kursus saat Relasi ≥ 40'},
+ {id:'rt',name:'Pak RT (Tokoh Warga)',place:'park',perk:'+2 Reputasi ekstra saat Relasi ≥ 50'}
+];
+
+const defaultState={
+ name:'Warga Baru',money:500000,health:100,energy:100,stress:0,rep:10,
+ hunger:20,thirst:15,level:1,xp:0,
+ job:'Belum bekerja',salary:0,day:1,hour:7,minute:0,place:'market',weather:'Cerah',
+ inventory:{'Air mineral':2,'Nasi bungkus':1},
+ home:'Kos sederhana',rent:150000,ownedHouse:false,
+ vehicle:'Jalan kaki',bank:0,
+ skills:{comm:1,mgmt:1,tech:1},
+ ownedBiz:{},
+ relations:{sari:10,hendra:0,rina:5,rt:15},
+ stocks:{BBRI:0,TLKM:0,BTC:0}
+};
+
+let s=JSON.parse(JSON.stringify(defaultState));
+let logEntries=[];
+let activeDock='activity';
+let drawerOpen=true;
+let isBusyTransition=false;
+
+function rupiah(n){return 'Rp'+Math.floor(n).toLocaleString('id-ID')}
+
+function floatText(text,color='#22c55e'){
+ const el=document.createElement('div');
+ el.className='floater';el.textContent=text;el.style.color=color;
+ el.style.left=(42+Math.random()*16)+'%';el.style.bottom='240px';
+ document.body.appendChild(el);
+ setTimeout(()=>el.remove(),1200);
+}
+
+function animateActor(mode='acting'){
+ const actor=$('playerActor');
+ actor.classList.remove('walking','acting');
+ void actor.offsetWidth;
+ actor.classList.add(mode);
+ setTimeout(()=>actor.classList.remove(mode),mode==='walking'?650:550);
+}
+
+function shakeScreen(){
+ $('appWrap').classList.remove('shake');
+ void $('appWrap').offsetWidth;
+ $('appWrap').classList.add('shake');
+}
+
+function log(t,cls=''){
+ logEntries.unshift(`<p class="${cls}">• ${t}</p>`);
+ logEntries=logEntries.slice(0,35);
+ $('log').innerHTML=logEntries.join('');
+}
+
+function toast(t){
+ $('toast').textContent=t;$('toast').style.display='block';
+ clearTimeout(window._toastTimer);
+ window._toastTimer=setTimeout(()=>$('toast').style.display='none',1900);
+}
+
+function calcDailyBizIncome(){
+ let total=0;
+ businesses.forEach(b=>{
+  const lvl=s.ownedBiz[b.id]||0;
+  if(lvl>0) total+=b.baseIncome*lvl;
+ });
+ if(s.relations.hendra>=60) total=Math.floor(total*1.15);
+ return total;
+}
+
+function getAchievements(){
+ return [
+  {title:'Pekerja Keras',desc:'Dapatkan pekerjaan pertamamu',done:s.job!=='Belum bekerja'},
+  {title:'Juragan Muda',desc:'Miliki minimal 1 bisnis pribadi',done:Object.keys(s.ownedBiz).length>0},
+  {title:'Sultan Kota',desc:'Total kekayaan Rp10.000.000',done:(s.money+s.bank)>=10000000},
+  {title:'Tuan Tanah',desc:'Beli Rumah Tipe 36',done:s.ownedHouse},
+  {title:'Sarjana Kota',desc:'Salah satu skill mencapai Lv.5',done:Math.max(s.skills.comm,s.skills.mgmt,s.skills.tech)>=5},
+  {title:'Investor Ulung',desc:'Beli saham/kripto',done:Object.values(s.stocks).some(v=>v>0)}
+ ];
+}
+
+function updateStageVisuals(){
+ const stage=$('cityStage');
+ const loc=places.find(p=>p.id===s.place)||places[0];
+
+ stage.classList.remove('morning','afternoon','evening','night','raining','no-road');
+ if(s.hour>=5 && s.hour<11) stage.classList.add('morning');
+ else if(s.hour>=11 && s.hour<16) stage.classList.add('afternoon');
+ else if(s.hour>=16 && s.hour<19) stage.classList.add('evening');
+ else stage.classList.add('night');
+ if(s.weather==='Hujan') stage.classList.add('raining');
+ if(loc.noRoad) stage.classList.add('no-road');
+
+ const img=$('scenePhoto');
+ if(img.getAttribute('src')!==loc.photo){
+  img.style.opacity='.4';
+  img.src=loc.photo;
+  img.onload=()=>{img.style.opacity='1'};
+ }
+
+ $('venueBanner').textContent=loc.banner;
+ $('brandStrip').innerHTML=(loc.signs||[]).map(sg=>`<span class="mini-sign ${sg.cls}">${sg.text}</span>`).join('');
+
+ const actor=$('playerActor');
+ const sprite=$('playerSprite');
+ actor.style.left=loc.pos;
+
+ if(!loc.noRoad && s.vehicle==='Motor bekas'){
+  actor.classList.add('driving');
+  sprite.textContent='🏍️';
+ }else if(!loc.noRoad && s.vehicle==='Mobil keluarga'){
+  actor.classList.add('driving');
+  sprite.textContent='🚙';
+ }else{
+  actor.classList.remove('driving');
+  sprite.textContent=s.energy<25?'🚶':'🧍';
+ }
+ $('playerStageTag').textContent=`${s.name} • ${loc.name}`;
+}
+
+function render(){
+ $('money').textContent=rupiah(s.money);
+ $('passiveIncome').textContent=rupiah(calcDailyBizIncome());
+ $('health').textContent=Math.round(s.health)+'%';
+ $('hunger').textContent=Math.round(s.hunger)+'%';
+ $('thirst').textContent=Math.round(s.thirst)+'%';
+ $('energy').textContent=Math.round(s.energy)+'%';
+
+ $('healthBar').style.width=s.health+'%';
+ $('healthBar').style.background=s.health<30?'var(--red)':'var(--green)';
+ $('hungerBar').style.width=s.hunger+'%';
+ $('thirstBar').style.width=s.thirst+'%';
+ $('energyBar').style.width=s.energy+'%';
+
+ const days=['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
+ $('dateLine').textContent=`Hari ${s.day} • ${days[(s.day-1)%7]} • ${String(s.hour).padStart(2,'0')}:${String(s.minute).padStart(2,'0')}`;
+ $('weather').textContent=(s.weather==='Hujan'?'🌧️ ':'☀️ ')+s.weather;
+ $('repBadge').textContent=`⭐ ${s.rep} • Lv.${s.level} (${s.xp}/${s.level*100})`;
+
+ const achs=getAchievements();
+ $('achCount').textContent=`${achs.filter(a=>a.done).length}/${achs.length}`;
+
+ updateStageVisuals();
+ renderDrawer();
+}
+
+function openDockTab(tab){
+ if(activeDock===tab && drawerOpen){
+  toggleDrawer();
+  return;
+ }
+ activeDock=tab;
+ drawerOpen=true;
+ ['activity','map','inventory','menu'].forEach(t=>{
+  $('dock-'+t).classList.toggle('active',t===tab);
+ });
+ $('drawerPanel').classList.add('open');
+ playTone('click');
+ renderDrawer();
+}
+
+function toggleDrawer(){
+ drawerOpen=!drawerOpen;
+ $('drawerPanel').classList.toggle('open',drawerOpen);
+}
+
+function renderDrawer(){
+ const panel=$('drawerPanel');
+ panel.classList.toggle('open',drawerOpen);
+ if(!drawerOpen) return;
+
+ if(activeDock==='map'){
+  const travelMin=s.vehicle==='Mobil keluarga'?2:s.vehicle==='Motor bekas'?4:10;
+  $('drawerTitle').textContent=`🗺️ Map Kota (Tempuh: ${travelMin} mnt)`;
+  $('drawerBody').innerHTML=`<div class="place-grid">${
+   places.map(p=>`<button class="place-btn ${s.place===p.id?'active':''}" onclick="go('${p.id}')">
+    <strong>${p.icon} ${p.name}</strong><small>${p.desc}</small>
+   </button>`).join('')
+  }</div>`;
+  return;
+ }
+
+ if(activeDock==='inventory'){
+  $('drawerTitle').textContent='🎒 Inventaris Tas';
+  const items=Object.entries(s.inventory).filter(([_,v])=>v>0);
+  $('drawerBody').innerHTML=items.length?items.map(([k,v])=>`
+   <div class="inv-item">
+    <span>${k} <b>×${v}</b></span>
+    <button class="primary" onclick="useItem('${k}')">Gunakan</button>
+   </div>`).join(''):'<p class="muted">Inventaris masih kosong.</p>';
+  return;
+ }
+
+ if(activeDock==='menu'){
+  $('drawerTitle').textContent='☰ Menu Profil, Skill & Relasi';
+  $('drawerBody').innerHTML=`
+   <div class="row"><span>Nama</span><b>${s.name}</b></div>
+   <div class="row"><span>Pekerjaan</span><b>${s.job}</b></div>
+   <div class="row"><span>Hunian & Kendaraan</span><b>${s.home} • ${s.vehicle}</b></div>
+   <div class="row"><span>Skill</span><b>Kom Lv.${s.skills.comm} • Mgmt Lv.${s.skills.mgmt} • IT Lv.${s.skills.tech}</b></div>
+   <div class="actions">
+    <button onclick="openProfile()">✏️ Edit Nama</button>
+    <button onclick="openProperty()">🏠 Properti</button>
+    <button onclick="openAchievements()">🏆 Pencapaian</button>
+   </div>`;
+  return;
+ }
+
+ const loc=places.find(p=>p.id===s.place)||places[0];
+ $('drawerTitle').textContent=`⚡ Aktivitas — ${loc.icon} ${loc.name}`;
+ let h='';
+ const localNpc=npcs.find(n=>n.place===s.place);
+ if(localNpc){
+  h+=`<div class="inv-item" style="background:#16283b;border-color:#2e4c6d">
+   <div><b>👋 ${localNpc.name}</b><div class="muted">Relasi ${s.relations[localNpc.id]}% • ${localNpc.perk}</div></div>
+   <button class="blue" onclick="chatNpc('${localNpc.id}')">Ngobrol (-5⚡)</button>
+  </div>`;
+ }
+
+ if(s.place==='home'){
+  h+=`<p class="muted" style="margin:0 0 8px">Ruangan dalam: <b>${s.home}</b>. Istirahat di kasur memulihkan energi & kesehatan.</p>
+  <div class="actions">
+   <button class="gold" onclick="sleep()">🛏️ Tidur Semalaman (Pagi Hari)</button>
+   <button onclick="nap()">💤 Rebahan 1 Jam (+15⚡)</button>
+   <button onclick="openProperty()">🏠 Ganti Hunian</button>
+  </div>`;
+ }else if(s.place==='park'){
+  h+=`<p class="muted" style="margin:0 0 8px">Udara taman segar di tengah pepohonan kota.</p>
+  <div class="actions">
+   <button onclick="walk()">🌿 Jalan di Taman (-7⚡, -8 Stress)</button>
+   <button onclick="socialize()">🗣️ Santai & Sapa (-5⚡)</button>
+  </div>`;
+ }else if(s.place==='square'){
+  h+=`<div class="actions">
+   <button onclick="walk()">🚶 Jalan Alun-alun (-8⚡)</button>
+   <button onclick="socialize()">🗣️ Sapa Warga (-5⚡)</button>
+   <button class="purple" onclick="startWorkMinigame('busk')">🎸 Ngamen (-15⚡)</button>
+  </div>`;
+ }else if(s.place==='warung'){
+  const disc=s.relations.sari>=50?0.75:1;
+  const pRames=Math.floor(18000*disc), pTeh=Math.floor(5000*disc), pBungkus=Math.floor(15000*disc);
+  h+=`<div class="actions">
+   <button onclick="buyConsume('Nasi rames',${pRames},55,10)">🍛 Makan — ${rupiah(pRames)}</button>
+   <button onclick="buyConsume('Es teh',${pTeh},0,45)">🥤 Es Teh — ${rupiah(pTeh)}</button>
+   <button onclick="buyItem('Nasi bungkus',${pBungkus})">🥡 Bungkus — ${rupiah(pBungkus)}</button>
+  </div>`;
+ }else if(s.place==='market'){
+  h+=`<div class="actions">
+   <button onclick="buyItem('Air mineral',5000)">💧 Air — Rp5rb</button>
+   <button onclick="buyItem('Roti coklat',8000)">🍞 Roti — Rp8rb</button>
+   <button onclick="buyItem('Kopi kaleng',10000)">☕ Kopi — Rp10rb</button>
+   <button onclick="buyItem('Kotak P3K',25000)">🩹 P3K — Rp25rb</button>
+   <button onclick="buyItem('Vitamin Relaksasi',15000)">💊 Vitamin — Rp15rb</button>
+  </div>`;
+ }else if(s.place==='campus'){
+  const disc=s.relations.rina>=40?0.8:1;
+  h+=`<div class="row"><span>🗣️ Komunikasi (Lv.${s.skills.comm})</span><button ${s.skills.comm>=10?'disabled':''} onclick="trainSkill('comm',${Math.floor(120000*s.skills.comm*disc)})">${rupiah(Math.floor(120000*s.skills.comm*disc))}</button></div>
+  <div class="row"><span>📊 Manajemen (Lv.${s.skills.mgmt})</span><button ${s.skills.mgmt>=10?'disabled':''} onclick="trainSkill('mgmt',${Math.floor(150000*s.skills.mgmt*disc)})">${rupiah(Math.floor(150000*s.skills.mgmt*disc))}</button></div>
+  <div class="row"><span>💻 Teknologi (Lv.${s.skills.tech})</span><button ${s.skills.tech>=10?'disabled':''} onclick="trainSkill('tech',${Math.floor(150000*s.skills.tech*disc)})">${rupiah(Math.floor(150000*s.skills.tech*disc))}</button></div>`;
+ }else if(s.place==='office'){
+  jobs.forEach(j=>{
+   const isCurrent=s.job===j.title;
+   const skillOk=!j.reqSkill || s.skills[j.reqSkill]>=j.reqVal;
+   const locked=s.level<j.reqLevel || !skillOk;
+   h+=`<div class="row"><div><b>${j.title}</b><div class="muted">${rupiah(j.salary)}/shift • Lv.${j.reqLevel}</div></div>
+    ${isCurrent?'<button class="danger" onclick="resign()">Resign</button>':`<button ${locked?'disabled':''} onclick="apply('${j.title}',${j.salary})">${locked?'Terkunci':'Lamar'}</button>`}</div>`;
+  });
+  h+=`<div class="actions">
+   <button class="primary" onclick="work(false)">💼 Shift Normal</button>
+   <button class="purple" onclick="startWorkMinigame('work')">⚡ Shift Fokus (+30%)</button>
+  </div>`;
+ }else if(s.place==='business'){
+  businesses.forEach(b=>{
+   const lvl=s.ownedBiz[b.id]||0;
+   const price=lvl===0?b.cost:Math.floor(b.cost*0.7*lvl);
+   const locked=s.skills.mgmt<b.reqMgmt;
+   h+=`<div class="row"><div><b>${b.name} ${lvl>0?`[Lv.${lvl}]`:''}</b><div class="muted">+${rupiah(b.baseIncome*(lvl||1))}/hr • Mgmt Lv.${b.reqMgmt}</div></div>
+    <button class="gold" ${locked?'disabled':''} onclick="buyBusiness('${b.id}',${price})">${locked?'Terkunci':(lvl===0?'Beli':'Upgrade')}</button></div>`;
+  });
+ }else if(s.place==='stock'){
+  stocksList.forEach(st=>{
+   const owned=s.stocks[st.id]||0;
+   h+=`<div class="row"><div><b>${st.name}</b><div class="muted">${rupiah(st.price)} • Lot: ${owned}</div></div>
+    <div style="display:flex;gap:5px">
+     <button class="primary" onclick="buyStock('${st.id}',${st.price})">Beli</button>
+     <button class="danger" ${owned<=0?'disabled':''} onclick="sellStock('${st.id}',${st.price})">Jual</button>
+    </div></div>`;
+  });
+ }else if(s.place==='garage'){
+  h+=`<div class="row"><div><b>🏍️ Motor Honda/Suzuki</b><div class="muted">4 mnt tempuh</div></div><button ${s.vehicle!=='Jalan kaki'?'disabled':''} onclick="buyVehicle('Motor bekas',4000000)">${s.vehicle==='Motor bekas'?'Milik':'Rp4 Juta'}</button></div>
+  <div class="row"><div><b>🚙 Mobil Keluarga</b><div class="muted">2 mnt tempuh</div></div><button ${s.vehicle==='Mobil keluarga'?'disabled':''} onclick="buyVehicle('Mobil keluarga',25000000)">${s.vehicle==='Mobil keluarga'?'Milik':'Rp25 Juta'}</button></div>`;
+ }else if(s.place==='bank'){
+  h+=`<div class="row"><span>Tabungan</span><b class="good">${rupiah(s.bank)}</b></div>
+  <div class="actions">
+   <button onclick="deposit(100000)">Setor 100rb</button>
+   <button onclick="deposit(500000)">Setor 500rb</button>
+   <button onclick="withdraw(100000)">Tarik 100rb</button>
+   <button onclick="withdraw(500000)">Tarik 500rb</button>
+  </div>`;
+ }
+ $('drawerBody').innerHTML=h;
+}
+
+function tick(min=30){
+ s.minute+=min;
+ while(s.minute>=60){
+  s.minute-=60;s.hour++;
+  s.hunger=Math.min(100,s.hunger+3);
+  s.thirst=Math.min(100,s.thirst+4);
+  s.energy=Math.max(0,s.energy-1.5);
+  if(s.job!=='Belum bekerja') s.stress=Math.min(100,s.stress+1.5);
+ }
+ if(s.hour>=24){s.hour-=24;s.day++;processNewDay();}
+ if(s.hunger>=90 || s.thirst>=90){s.health=Math.max(1,s.health-4);log('Kelaparan/haus parah! Kesehatan turun.','bad');}
+ if(s.stress>=85){s.health=Math.max(1,s.health-2);log('Stress tinggi! Kesehatan turun.','bad');}
+ autoSave();render();
+}
+
+function processNewDay(){
+ s.weather=Math.random()<0.3?'Hujan':'Cerah';
+ stocksList.forEach(st=>{
+  const pct=(Math.random()*0.16)-0.075;
+  st.price=Math.max(1000,Math.floor(st.price*(1+pct)));
+ });
+ if(s.bank>0){let i=Math.floor(s.bank*0.005);s.bank+=i;log(`Bunga bank: +${rupiah(i)}.`,'good');}
+ const biz=calcDailyBizIncome();
+ if(biz>0){s.money+=biz;log(`Profit bisnis: +${rupiah(biz)}.`,'good');}
+ if(s.day%7===1 && s.rent>0){s.money-=s.rent;log(`Sewa ${s.home}: -${rupiah(s.rent)}.`,'warn');}
+}
+
+function go(id){
+ if(s.place===id || isBusyTransition) return;
+ isBusyTransition=true;
+ playTone('click');
+ animateActor('walking');
+
+ const loc=places.find(p=>p.id===id)||places[0];
+ const travelMin=s.vehicle==='Mobil keluarga'?2:s.vehicle==='Motor bekas'?4:10;
+ const energyCost=s.vehicle==='Jalan kaki'?2:0;
+ const vehIcon=s.vehicle==='Mobil keluarga'?'🚙':(s.vehicle==='Motor bekas'?'🏍️':'🚶');
+
+ $('fadeIcon').textContent=vehIcon;
+ $('fadeText').textContent=`Perjalanan ke ${loc.name}...`;
+ $('fadeSub').textContent=`Menggunakan ${s.vehicle} • ${travelMin} menit`;
+ $('sceneFade').classList.add('active');
+
+ setTimeout(()=>{
+  s.energy=Math.max(0,s.energy-energyCost);
+  s.place=id;
+  activeDock='activity';
+  drawerOpen=true;
+  ['activity','map','inventory','menu'].forEach(t=>$('dock-'+t).classList.toggle('active',t==='activity'));
+  tick(travelMin);
+  log(`Tiba di ${loc.name}.`);
+  $('sceneFade').classList.remove('active');
+  isBusyTransition=false;
+ },850);
+}
+
+function sleep(){
+ if(isBusyTransition) return;
+ if(s.place!=='home'){
+  toast('Pergi ke Rumah dulu untuk tidur nyenyak!');
+  playTone('error');
+  go('home');
+  return;
+ }
+ isBusyTransition=true;
+ playTone('level');
+ $('fadeIcon').textContent='🌙';
+ $('fadeText').textContent='Zzz... Sedang Tidur Nyenyak';
+ $('fadeSub').textContent=`Memulihkan energi di ${s.home}`;
+ $('sceneFade').classList.add('active');
+
+ setTimeout(()=>{
+  const bonus=homes.find(h=>h.name===s.home)?.energyBonus||0;
+  s.hour=7;s.minute=0;s.energy=100;s.stress=Math.max(0,s.stress-45);
+  s.health=Math.min(100,s.health+20+bonus);
+  s.hunger=Math.min(100,s.hunger+15);s.thirst=Math.min(100,s.thirst+15);
+  s.day++;
+  processNewDay();
+  autoSave();
+  render();
+  log(`Bangun pagi segar di ${s.home} (Hari ${s.day}).`,'info');
+  floatText('Energi 100% ⚡','#eab308');
+  $('sceneFade').classList.remove('active');
+  isBusyTransition=false;
+ },2200);
+}
+
+function nap(){
+ if(s.place!=='home') return toast('Hanya bisa rebahan di rumah!');
+ s.energy=Math.min(100,s.energy+15);
+ s.stress=Math.max(0,s.stress-10);
+ animateActor('acting');playTone('click');
+ floatText('+15 ⚡','#eab308');
+ log('Rebahan sebentar di dalam rumah.');
+ tick(60);
+}
+
+function spend(n){
+ if(s.money<n){toast('Uang tidak cukup!');playTone('error');shakeScreen();return false}
+ s.money-=n;floatText('-'+rupiah(n),'#ef4444');return true;
+}
+
+function addXP(n){
+ s.xp+=n;floatText(`+${n} XP`,'#a855f7');
+ while(s.xp>=s.level*100){
+  s.xp-=s.level*100;s.level++;s.rep+=5;
+  playTone('level');log(`🎉 Naik ke Level ${s.level}!`,'good');toast(`Naik ke Level ${s.level}!`);
+ }
+}
+
+function chatNpc(id){
+ if(s.energy<5){shakeScreen();playTone('error');return toast('Energi rendah!')}
+ s.energy-=5;s.relations[id]=Math.min(100,s.relations[id]+10);
+ animateActor('acting');playTone('click');floatText('+10 Relasi','#3b82f6');
+ log(`Mengobrol dengan ${npcs.find(n=>n.id===id).name}.`,'info');tick(20);
+}
+
+function walk(){
+ if(s.energy<7){shakeScreen();playTone('error');return toast('Energi rendah!')}
+ s.energy-=7;s.rep+=1;s.stress=Math.max(0,s.stress-8);addXP(12);
+ animateActor('walking');playTone('click');log('Jalan santai menyegarkan pikiran.');tick(25);
+}
+
+function socialize(){
+ if(s.energy<5){shakeScreen();playTone('error');return toast('Energi rendah!')}
+ s.energy-=5;const b=s.relations.rt>=50?5:3;s.rep+=b;addXP(15);
+ animateActor('acting');playTone('click');log(`Bersosialisasi (+${b} Rep).`,'info');tick(20);
+}
+
+function trainSkill(key,cost){
+ if(s.energy<15){shakeScreen();playTone('error');return toast('Energi rendah!')}
+ if(!spend(cost)) return;
+ s.energy-=15;s.skills[key]++;animateActor('acting');playTone('level');addXP(30);
+ log(`Skill ${key.toUpperCase()} naik ke Lv.${s.skills[key]}!`,'good');tick(120);
+}
+
+function buyBusiness(id,price){
+ if(!spend(price)) return;
+ s.ownedBiz[id]=(s.ownedBiz[id]||0)+1;s.rep+=6;animateActor('acting');playTone('coin');
+ log(`Bisnis ${businesses.find(x=>x.id===id).name} aktif!`,'good');render();
+}
+
+function buyStock(id,price){if(!spend(price)) return;s.stocks[id]=(s.stocks[id]||0)+1;animateActor('acting');playTone('coin');log(`Beli saham ${id}.`);tick(5);}
+function sellStock(id,price){if(!s.stocks[id]) return;s.stocks[id]--;s.money+=price;floatText('+'+rupiah(price));animateActor('acting');playTone('coin');log(`Jual saham ${id}.`);tick(5);}
+
+let mgInterval=null;
+function startWorkMinigame(mode){
+ if(mode==='work'){
+  if(s.job==='Belum bekerja') return toast('Lamar kerja dulu!');
+  if(s.energy<25){shakeScreen();playTone('error');return toast('Energi rendah!')}
+ }else if(s.energy<15){shakeScreen();playTone('error');return toast('Energi rendah!')}
+ modal(`<h3>⚡ Tantangan Fokus</h3>
+  <p class="muted">Tekan HENTIKAN di zona hijau untuk Bonus +30%!</p>
+  <div class="mg-track"><div class="mg-zone"></div><div class="mg-cursor" id="mgCursor"></div></div>
+  <div class="actions"><button class="primary" style="width:100%" onclick="stopWorkMinigame('${mode}')">🎯 HENTIKAN!</button></div>`);
+ let pos=0,dir=1;
+ clearInterval(mgInterval);
+ mgInterval=setInterval(()=>{
+  pos+=dir*3.5;if(pos>=97){pos=97;dir=-1}if(pos<=0){pos=0;dir=1}
+  const c=$('mgCursor');if(c) c.style.left=pos+'%';
+ },18);
+}
+
+function stopWorkMinigame(mode){
+ clearInterval(mgInterval);
+ const c=$('mgCursor');const pos=c?parseFloat(c.style.left):0;
+ const ok=pos>=42 && pos<=58;
+ closeModal();
+ if(mode==='work') work(ok);
+ else{
+  s.energy-=15;
+  let earn=12000+Math.floor(Math.random()*22000)+(s.rep*300);
+  if(ok) earn=Math.floor(earn*1.35);
+  s.money+=earn;floatText('+'+rupiah(earn));animateActor('acting');playTone('coin');addXP(ok?25:15);
+  log(`Ngamen selesai: +${rupiah(earn)}.`,'good');tick(45);
+ }
+}
+
+function work(bonusPerf=false){
+ if(s.job==='Belum bekerja') return toast('Lamar kerja dulu!');
+ if(s.energy<25){shakeScreen();playTone('error');return toast('Energi rendah!')}
+ s.energy-=25;s.hunger=Math.min(100,s.hunger+14);s.thirst=Math.min(100,s.thirst+16);s.stress=Math.min(100,s.stress+8);
+ const total=Math.floor(s.salary*(bonusPerf?1.3:1));
+ s.money+=total;s.rep+=(bonusPerf?2:1);animateActor('acting');playTone('coin');floatText('+'+rupiah(total));
+ addXP(bonusPerf?45:32);log(`Shift selesai: +${rupiah(total)}.`,'good');tick(180);
+}
+
+function buyConsume(name,price,hRed,tRed){
+ if(!spend(price)) return;
+ s.hunger=Math.max(0,s.hunger-hRed);s.thirst=Math.max(0,s.thirst-tRed);s.energy=Math.min(100,s.energy+8);
+ animateActor('acting');playTone('click');log(`Menikmati ${name}.`);tick(15);
+}
+
+function buyItem(k,price){if(!spend(price)) return;s.inventory[k]=(s.inventory[k]||0)+1;animateActor('acting');playTone('click');log(`Beli ${k}.`);tick(5);}
+
+function useItem(k){
+ if(!s.inventory[k]) return;
+ s.inventory[k]--;animateActor('acting');playTone('click');
+ if(k==='Air mineral'){s.thirst=Math.max(0,s.thirst-45);floatText('-45 Haus','#3b82f6');}
+ else if(k==='Nasi bungkus'){s.hunger=Math.max(0,s.hunger-50);s.energy=Math.min(100,s.energy+10);floatText('-50 Lapar');}
+ else if(k==='Roti coklat'){s.hunger=Math.max(0,s.hunger-28);floatText('-28 Lapar');}
+ else if(k==='Kopi kaleng'){s.energy=Math.min(100,s.energy+25);s.thirst=Math.max(0,s.thirst-15);floatText('+25 ⚡','#eab308');}
+ else if(k==='Kotak P3K'){s.health=Math.min(100,s.health+40);floatText('+40 ❤️','#22c55e');}
+ else if(k==='Vitamin Relaksasi'){s.stress=Math.max(0,s.stress-35);floatText('-35 Stress','#a855f7');}
+ log(`Pakai ${k}.`);render();
+}
+
+function apply(title,sal){s.job=title;s.salary=sal;s.rep+=2;animateActor('acting');playTone('level');log(`Diterima sebagai ${title}!`,'good');render();}
+function resign(){log(`Resign dari ${s.job}.`,'warn');s.job='Belum bekerja';s.salary=0;render();}
+
+function buyVehicle(name,price){if(!spend(price)) return;s.vehicle=name;s.rep+=8;animateActor('acting');playTone('coin');log(`Punya ${name}!`,'good');render();}
+function deposit(amt){if(!spend(amt)) return;s.bank+=amt;playTone('coin');log(`Setor ${rupiah(amt)}.`);tick(5);}
+function withdraw(amt){if(s.bank<amt){playTone('error');return toast('Saldo kurang.')}s.bank-=amt;s.money+=amt;floatText('+'+rupiah(amt));playTone('coin');log(`Tarik ${rupiah(amt)}.`);tick(5);}
+
+function openProperty(){
+ const list=homes.map(h=>`<div class="row"><div><b>${h.name}</b><div class="muted">${h.desc}</div></div>${s.home===h.name?'<span class="badge">Aktif</span>':`<button class="primary" onclick="selectHome('${h.name}',${h.rent},${h.price})">${h.price>0?rupiah(h.price):'Pindah'}</button>`}</div>`).join('');
+ modal(`<h3>🏠 Properti</h3>${list}<div class="actions"><button onclick="closeModal()">Tutup</button></div>`);
+}
+function selectHome(name,rent,price){if(price>0 && !s.ownedHouse){if(!spend(price)) return;s.ownedHouse=true;}s.home=name;s.rent=rent;playTone('coin');log(`Pindah ke ${name}.`,'good');closeModal();render();}
+
+function openAchievements(){
+ const list=getAchievements().map(a=>`<div class="row"><div><b>${a.done?'✅':'🔒'} ${a.title}</b><div class="muted">${a.desc}</div></div><span class="badge">${a.done?'Selesai':'Belum'}</span></div>`).join('');
+ modal(`<h3>🏆 Pencapaian</h3>${list}<div class="actions"><button onclick="closeModal()">Tutup</button></div>`);
+}
+
+function openProfile(){
+ modal(`<h3>✏️ Edit Profil</h3><label class="muted">Nama Karakter</label><input id="newName" maxlength="22" value="${s.name}"><div class="actions"><button class="primary" onclick="s.name=document.getElementById('newName').value.trim()||'Warga Baru';closeModal();render()">Simpan</button><button onclick="closeModal()">Batal</button></div>`);
+}
+
+function modal(x){$('dialog').innerHTML=x;$('modal').classList.add('show')}
+function closeModal(){$('modal').classList.remove('show')}
+
+function saveGame(){localStorage.setItem('kotakita-v11',JSON.stringify({s,logEntries}));toast('Progres disimpan!');}
+function autoSave(){localStorage.setItem('kotakita-v11',JSON.stringify({s,logEntries}));}
+function loadGame(){
+ try{
+  const d=JSON.parse(localStorage.getItem('kotakita-v11'));
+  if(d && d.s){
+   s={...JSON.parse(JSON.stringify(defaultState)),...d.s};
+   s.skills={...defaultState.skills,...(d.s.skills||{})};
+   s.relations={...defaultState.relations,...(d.s.relations||{})};
+   s.stocks={...defaultState.stocks,...(d.s.stocks||{})};
+   logEntries=d.logEntries||[];
+  }
+ }catch(e){}
+}
+function confirmReset(){
+ modal(`<h3>🔄 Reset Game?</h3><p class="muted">Semua progres akan dihapus permanen.</p><div class="actions"><button class="danger" onclick="localStorage.removeItem('kotakita-v11');location.reload()">Ya, Reset</button><button onclick="closeModal()">Batal</button></div>`);
+}
+
+loadGame();
+if(logEntries.length===0) log('Selamat datang di Kota Kita v11.0!','good');
+render();
+</script>
+</body>
+</html>
